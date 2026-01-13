@@ -1,9 +1,9 @@
 <script setup>
-  
+  import Button from "primevue/button"
 </script>
 
 <template>
-  <router-view />
+  <Button>测试按钮</Button>
 </template>
 
 <style scoped>
