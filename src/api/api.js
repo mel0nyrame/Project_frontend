@@ -50,3 +50,24 @@ export const updateScore = (studentId, courseId, data) => {
         data: data
     });
 };
+
+export const deleteStudent = (studentId) => {
+    return request({
+        url: `/api/student/${studentId}`,
+        method: 'DELETE'
+    });
+};
+
+export const deleteCourse = (courseId) => {
+    return request({
+        url: `/api/course/${courseId}`,
+        method: 'DELETE'
+    });
+};
+
+export const deleteScore = (studentId) => {
+    return request({
+        url: `/api/score/${studentId}`,
+        method: 'DELETE'
+    });
+};
