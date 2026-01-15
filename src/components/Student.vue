@@ -18,6 +18,13 @@
                 }
             }"
         >
+            <template #paginatorstart>
+                <Button type="button" icon="pi pi-refresh" text />
+            </template>
+            <template #paginatorend>
+                <Button type="button" icon="pi pi-download" text />
+            </template>
+            
             <Column field="studentId" header="学号" style="width: 14%">
                 <template #editor="{ data, field }">
                     <InputText v-model="data[field]" fluid />
@@ -87,9 +94,9 @@ onMounted(async () => {
 });
 
 const onRowEditSave = async (event) => {
-    const { newData, index } = event;
+    const { data, newData, index } = event;
     try {
-        await updateStudent(newData.studentId, newData);
+        await updateStudent(data.studentId, newData);
         students.value[index] = newData;
         console.log('更新成功:', newData);
     } catch (error) {

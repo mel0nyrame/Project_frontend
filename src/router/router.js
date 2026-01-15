@@ -1,17 +1,27 @@
 import {createRouter,createWebHashHistory} from 'vue-router'
-import Button from '../components/Button.vue'
-import Table from '../components/Table.vue'
+import Student from '../components/Student.vue'
+import Top from '../layouts/Layout.vue'
+import Course from '../components/Course.vue'
+import Score from '../components/Score.vue'
 
 const router = createRouter({
     history:createWebHashHistory(),
     routes:[
         {
             path:"/",
-            component:Button
+            component:Top
         },
         {
-            path:"/table",
-            component:Table
+            path:"/student",
+            component:Student
+        },
+        {
+            path:"/course",
+            component:Course
+        },
+        {
+            path:"/score",
+            component:Score
         }
     ]
 })

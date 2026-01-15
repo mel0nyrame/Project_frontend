@@ -19,3 +19,34 @@ export const updateStudent = (studentId, studentData) => {
         data: studentData
     });
 };
+
+export const getCourseList = () => {
+    return request({
+        url: '/api/course/',
+        method: 'GET',
+    });
+}
+
+export const updateCourse = (courseId, courseData) => {
+    return request({
+        url: `/api/course/${courseId}`,
+        method: 'PUT',
+        data: courseData
+    })
+}
+
+export const getScoreList = () => {
+    return request({
+        url: '/api/score/',
+        method: 'GET'
+    });
+};
+
+
+export const updateScore = (studentId, courseId, data) => {
+    return request({
+        url: `/api/score/${studentId}/${courseId}`,
+        method: 'PUT',
+        data: data
+    });
+};
