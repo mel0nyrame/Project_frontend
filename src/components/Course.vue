@@ -1,4 +1,5 @@
 <template>
+    <Toast></Toast>
     <div class="card">
         <DataTable 
             ref="dt"
@@ -38,11 +39,14 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { getCourseList, updateCourse, deleteCourse } from '../api/api.js';
+import { useToast } from 'primevue';
+import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 
+const toast = useToast();
 const courses = ref([]);
 const editingRows = ref([]);
 const dt = ref();
@@ -59,7 +63,8 @@ const loadData = async () => {
         courses.value = res.data?.data || [];
     } catch (error) {
         console.error('获取课程列表失败:', error);
-        alert('数据加载失败: ' + (error.response?.data?.msg || error.message));
+        console.error('数据加载失败: ' + (error.response?.data?.msg || error.message));
+        toast.add({ severity: 'error', summary: 'Error', detail: '数据加载失败', life: 2000 });
         courses.value = [];
     } finally {
         loading.value = false;
@@ -68,6 +73,7 @@ const loadData = async () => {
 
 const refreshData = async () => {
     await loadData();
+    toast.add({ severity: 'success', summary: 'Success', detail: '刷新成功', life: 2000 });
 };
 
 onMounted(() => {
@@ -80,7 +86,8 @@ const onRowEditSave = async (event) => {
         await updateCourse(newData.courseId, newData);
         courses.value[index] = newData;
     } catch (error) {
-        alert('更新失败: ' + (error.response?.data?.msg || error.message));
+        console.error('更新失败: ' + (error.response?.data?.msg || error.message));
+        toast.add({ severity: 'error', summary: 'Error', detail: '更新失败', life: 2000 });
         await loadData();
     }
 };
@@ -89,9 +96,11 @@ const onDelete = async (courseData) => {
     if (confirm(`确定要删除课程 ${courseData.courseName} (编号: ${courseData.courseId}) 吗？`)) {
         try {
             await deleteCourse(courseData.courseId);
+            toast.add({ severity: 'success', summary: 'Success', detail: '删除成功', life: 2000 });
             courses.value = courses.value.filter(c => c.courseId !== courseData.courseId);
         } catch (error) {
-            alert('删除失败: ' + (error.response?.data?.msg || error.message));
+            console.error('删除失败: ' + (error.response?.data?.msg || error.message));
+            toast.add({ severity: 'error', summary: 'Error', detail: '删除失败', life: 2000 });
         }
     }
 };

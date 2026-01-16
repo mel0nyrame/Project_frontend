@@ -1,4 +1,5 @@
 <template>
+    <Toast></Toast>
     <div class="card">
         <DataTable 
             ref="dt"
@@ -54,6 +55,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { getStudentList, updateStudent, deleteStudent} from '../api/api.js';
+import { useToast } from 'primevue';
+import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
@@ -67,6 +70,7 @@ const genders = ref([
     { label: '男', value: 'M' },
     { label: '女', value: 'F' }
 ]);
+const toast = useToast();
 
 const exportCSV = () => {
     dt.value.exportCSV();
@@ -79,7 +83,8 @@ const loadData = async () => {
         students.value = res.data?.data || [];
     } catch (error) {
         console.error('获取学生列表失败:', error);
-        alert('数据加载失败: ' + (error.response?.data?.msg || error.message));
+        console.error('数据加载失败: ' + (error.response?.data?.msg || error.message));
+        toast.add({ severity: 'error', summary: 'Error', detail: '数据加载失败', life: 2000 });
         students.value = [];
     } finally {
         loading.value = false;
@@ -88,6 +93,7 @@ const loadData = async () => {
 
 const refreshData = async () => {
     await loadData();
+    toast.add({ severity: 'success', summary: 'Success', detail: '刷新成功', life: 2000 });
 };
 
 onMounted(() => {
@@ -100,7 +106,8 @@ const onRowEditSave = async (event) => {
         await updateStudent(data.studentId, newData);
         students.value[index] = newData;
     } catch (error) {
-        alert('更新失败: ' + (error.response?.data?.msg || error.message));
+        console.error('更新失败: ' + (error.response?.data?.msg || error.message));
+        toast.add({ severity: 'error', summary: 'Error', detail: '更新失败', life: 2000 });
         await loadData();
     }
 };
@@ -109,9 +116,11 @@ const onDelete = async (studentData) => {
     if (confirm(`确定要删除学生 ${studentData.studentName} (学号: ${studentData.studentId}) 吗？`)) {
         try {
             await deleteStudent(studentData.studentId);
+            toast.add({ severity: 'success', summary: 'Success', detail: '删除成功', life: 2000 });
             students.value = students.value.filter(s => s.studentId !== studentData.studentId);
         } catch (error) {
-            alert('删除失败: ' + (error.response?.data?.msg || error.message));
+            console.error('删除失败: ' + (error.response?.data?.msg || error.message));
+            toast.add({ severity: 'error', summary: 'Error', detail: '删除失败', life: 2000 });
         }
     }
 };
