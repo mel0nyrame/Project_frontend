@@ -1,13 +1,17 @@
 <template>
     <Toast></Toast>
     <div class="card">
-        <FloatLabel class="mb-4" style="margin-top: 10px;">
-            <IconField>
-                <InputIcon class="pi pi-search" />
-                <InputText id="over_label" v-model="searchKeyword" @keyup.enter="onSearch" placeholder="搜索课程编号/名称" class="w-full" />
-                <Button label="清除" @click="clear"></Button> 
-            </IconField>
-        </FloatLabel>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; margin-top: 10px;">
+            <FloatLabel class="mb-4"">
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText id="over_label" v-model="searchKeyword" @keyup.enter="onSearch" placeholder="搜索课程编号/名称" class="w-full" />
+                    <Button label="清除" @click="clear"></Button> 
+                </IconField>
+            </FloatLabel>
+            <Button label="新增课程" severity="success" icon="pi pi-plus" @click="visible = true"></Button>
+        </div>
+        
         <DataTable 
             ref="dt"
             v-model:editingRows="editingRows" 
@@ -40,12 +44,28 @@
                 </template>
             </Column>
         </DataTable>
+        <div class="card flex justify-center">
+            <Dialog v-model:visible="visible" modal header="新增课程" :style="{ width: '25rem' }">
+                <div class="flex items-center gap-4 mb-4" >
+                    <label for="courseId" class="font-semibold w-24" style="margin-right: 10px;">课程编号</label>
+                    <InputText id="courseId" v-model="newCourse.courseId" class="flex-auto" autocomplete="off" />
+                </div>
+                <div class="flex items-center gap-4 mb-4" style="margin-top: 10px;">
+                    <label for="courseName" class="font-semibold w-24" style="margin-right: 10px;">课程名称</label>
+                    <InputText id="courseName" v-model="newCourse.courseName" class="flex-auto" autocomplete="off" />
+                </div>
+                <div class="flex justify-end gap-2">
+                    <Button type="button" label="取消" severity="secondary" @click="closeAddDialog" style="margin-top: 10px;margin-right: 10px;"></Button>
+                    <Button type="button" label="保存" @click="saveNewCourse" :loading="saving"></Button>
+                </div>
+            </Dialog>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { getCourseList, updateCourse, deleteCourse, searchCourses} from '../api/api.js';
+import { ref, onMounted , reactive} from 'vue';
+import { getCourseList, updateCourse, deleteCourse, searchCourses, addCourse} from '../api/api.js';
 import { useToast } from 'primevue';
 import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
@@ -55,6 +75,7 @@ import Button from 'primevue/button';
 import FloatLabel from 'primevue/floatlabel';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Dialog from 'primevue/dialog';
 
 const toast = useToast();
 const courses = ref([]);
@@ -62,6 +83,15 @@ const editingRows = ref([]);
 const dt = ref();
 const loading = ref(false);
 const searchKeyword = ref('');
+const saving = ref(false);
+
+const visible = ref(false);
+
+const newCourse = reactive({
+    courseId: '',
+    courseName: ''
+});
+
 
 const exportCSV = () => {
     dt.value.exportCSV();
@@ -141,6 +171,44 @@ const onDelete = async (courseData) => {
             console.error('删除失败: ' + (error.response?.data?.msg || error.message));
             toast.add({ severity: 'error', summary: 'Error', detail: '删除失败', life: 2000 });
         }
+    }
+};
+
+const openAddDialog = () => {
+    Object.keys(newCourse).forEach(key => {
+        newCourse[key] = '';
+    });
+    visible.value = true;
+};
+
+const closeAddDialog = () => {
+    visible.value = false;
+};
+
+const saveNewCourse = async () => {
+    if (!newCourse.courseId.trim()) {
+        toast.add({ severity: 'warn', summary: '警告', detail: '请输入课程id', life: 2000 });
+        return;
+    }
+    if (!newCourse.courseName.trim()) {
+        toast.add({ severity: 'warn', summary: '警告', detail: '请输入课程名称', life: 2000 });
+        return;
+    }
+    
+    saving.value = true;
+    try {
+        await addCourse(newCourse);
+        
+        toast.add({ severity: 'success', summary: '成功', detail: '新增课程成功', life: 2000 });
+
+        closeAddDialog();
+
+        await loadData();
+    } catch (error) {
+        console.error('新增失败: ' + (error.response?.data?.msg || error.message));
+        toast.add({ severity: 'error', summary: '错误', detail: error.response?.data?.msg || '新增课程失败', life: 2000 });
+    } finally {
+        saving.value = false;
     }
 };
 </script>

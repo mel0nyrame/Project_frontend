@@ -1,13 +1,16 @@
 <template>
     <Toast></Toast>
     <div class="card">
-        <FloatLabel class="mb-4" style="margin-top: 10px;">
-            <IconField>
-                <InputIcon class="pi pi-search" />
-                <InputText id="over_label" v-model="searchKeyword" @keyup.enter="onSearch" placeholder="搜索学号/课程编号/成绩" class="w-full" />
-                <Button label="清除" @click="clear"></Button> 
-            </IconField>
-        </FloatLabel>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; margin-top: 10px;">
+            <FloatLabel class="mb-4"">
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText id="over_label" v-model="searchKeyword" @keyup.enter="onSearch" placeholder="搜索学号/课程编号/成绩" class="w-full" />
+                    <Button label="清除" @click="clear"></Button> 
+                </IconField>
+            </FloatLabel>
+            <Button label="新增成绩" severity="success" icon="pi pi-plus" @click="openAddDialog"></Button>
+        </div>
         <DataTable 
             ref="dt"
             v-model:editingRows="editingRows" 
@@ -43,12 +46,32 @@
                 </template>
             </Column>
         </DataTable>
+        <div class="card flex justify-center">
+            <Dialog v-model:visible="visible" modal header="新增成绩" :style="{ width: '25rem' }">
+                <div class="flex items-center gap-4 mb-4" >
+                    <label for="studentId" class="font-semibold w-24" style="margin-right: 10px;">学生学号</label>
+                    <InputText id="studentId" v-model="newScore.studentId" class="flex-auto" autocomplete="off" />
+                </div>
+                <div class="flex items-center gap-4 mb-4" style="margin-top: 10px;">
+                    <label for="courseId" class="font-semibold w-24" style="margin-right: 10px;">课程编号</label>
+                    <InputText id="courseId" v-model="newScore.courseId" class="flex-auto" autocomplete="off" />
+                </div>
+                <div class="flex items-center gap-4 mb-4" style="margin-top: 10px;">
+                    <label for="score" class="font-semibold w-24" style="margin-right: 10px;">学生成绩</label>
+                    <InputText id="score" v-model="newScore.score" class="flex-auto" autocomplete="off" />
+                </div>
+                <div class="flex justify-end gap-2">
+                    <Button type="button" label="取消" severity="secondary" @click="closeAddDialog" style="margin-top: 10px;margin-right: 10px;"></Button>
+                    <Button type="button" label="保存" @click="saveNewScore" :loading="saving"></Button>
+                </div>
+            </Dialog>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { getScoreList, updateScore, deleteScore, searchScores} from '../api/api.js';
+import { ref, onMounted, reactive} from 'vue';
+import { getScoreList, updateScore, deleteScore, searchScores, addScore} from '../api/api.js';
 import { useToast } from 'primevue';
 import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
@@ -56,6 +79,7 @@ import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Button from 'primevue/button';
+import Dialog from 'primevue/dialog';
 
 const scores = ref([]);
 const editingRows = ref([]);
@@ -63,6 +87,15 @@ const dt = ref();
 const loading = ref(false);
 const toast = useToast();
 const searchKeyword = ref('');
+const saving = ref(false);
+
+const visible = ref(false);
+
+const newScore = reactive({
+    studentId: '',
+    courseId: '',
+    score: ''
+});
 
 const exportCSV = () => {
     dt.value.exportCSV();
@@ -145,6 +178,48 @@ const onDelete = async (scoreData) => {
             console.error('删除失败: ' + (error.response?.data?.msg || error.message));
             toast.add({ severity: 'error', summary: 'Error', detail: '删除失败', life: 2000 });
         }
+    }
+};
+
+const openAddDialog = () => {
+    Object.keys(newScore).forEach(key => {
+        newScore[key] = '';
+    });
+    visible.value = true;
+};
+
+const closeAddDialog = () => {
+    visible.value = false;
+};
+
+const saveNewScore = async () => {
+    if (!newScore.studentId.trim()) {
+        toast.add({ severity: 'warn', summary: '警告', detail: '请输入学生学号', life: 2000 });
+        return;
+    }
+    if (!newScore.courseId.trim()) {
+        toast.add({ severity: 'warn', summary: '警告', detail: '请输入课程编号', life: 2000 });
+        return;
+    }
+    if (!newScore.score.trim()) {
+        toast.add({ severity: 'warn', summary: '警告', detail: '请输入成绩', life: 2000 });
+        return;
+    }
+    
+    saving.value = true;
+    try {
+        await addScore(newScore);
+        
+        toast.add({ severity: 'success', summary: '成功', detail: '新增课程成功', life: 2000 });
+
+        closeAddDialog();
+
+        await loadData();
+    } catch (error) {
+        console.error('新增失败: ' + (error.response?.data?.msg || error.message));
+        toast.add({ severity: 'error', summary: '错误', detail: error.response?.data?.msg || '新增课程失败', life: 2000 });
+    } finally {
+        saving.value = false;
     }
 };
 </script>

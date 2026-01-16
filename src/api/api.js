@@ -95,3 +95,27 @@ export const searchScores = (keyword) => {
         params: { keyword }
     });
 };
+
+export const addStudent = (studentData) => {
+    return request({
+        url: '/api/student/',
+        method: 'POST',
+        data: studentData
+    })
+}
+
+export const addCourse = (courseData) => {
+    return request({
+        url: '/api/course/',
+        method: 'POST',
+        data: courseData
+    })
+}
+
+export const addScore = (scoreData) => {
+    return request({
+        url: '/api/score/',
+        method: 'POST',
+        data: scoreData
+    })
+}
