@@ -1,6 +1,13 @@
 <template>
     <Toast></Toast>
     <div class="card">
+        <FloatLabel class="mb-4" style="margin-top: 10px;">
+            <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText id="over_label" v-model="searchKeyword" @keyup.enter="onSearch" placeholder="搜索学号/课程编号/成绩" class="w-full" />
+                <Button label="清除" @click="clear"></Button> 
+            </IconField>
+        </FloatLabel>
         <DataTable 
             ref="dt"
             v-model:editingRows="editingRows" 
@@ -41,7 +48,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { getScoreList, updateScore, deleteScore } from '../api/api.js';
+import { getScoreList, updateScore, deleteScore, searchScores} from '../api/api.js';
 import { useToast } from 'primevue';
 import Toast from 'primevue/toast';
 import DataTable from 'primevue/datatable';
@@ -55,10 +62,16 @@ const editingRows = ref([]);
 const dt = ref();
 const loading = ref(false);
 const toast = useToast();
+const searchKeyword = ref('');
 
 const exportCSV = () => {
     dt.value.exportCSV();
 };
+
+const clear = () => {
+    searchKeyword.value = ''
+    loadData();
+}
 
 const loadData = async () => {
     loading.value = true;
@@ -84,10 +97,33 @@ onMounted(() => {
     loadData();
 });
 
+const onSearch = async () => {
+  if (!searchKeyword.value.trim()) {
+    loadData();
+    return;
+  }
+  loading.value = true;
+  try {
+    const res = await searchScores(searchKeyword.value.trim());
+    scores.value = res.data?.data || [];
+    if (scores.value.length === 0) {
+      toast.add({ severity: 'info', summary: '搜索结果', detail: '未找到匹配的成绩', life: 2000 });
+    } else {
+      toast.add({ severity: 'success', summary: '搜索成功', detail: `找到 ${scores.value.length} 条记录`, life: 2000 });
+    }
+  } catch (error) {
+    toast.add({ severity: 'error', summary: '搜索失败', detail: error.response?.data?.msg || error.message, life: 2000 });
+    scores.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
 const onRowEditSave = async (event) => {
     const { newData, index } = event;
     try {
         await updateScore(newData.studentId, newData.courseId, newData);
+        toast.add({ severity: 'success', summary: 'Success', detail: '修改成功', life: 2000 });
         scores.value[index] = newData;
     } catch (error) {
         console.error('更新失败: ' + (error.response?.data?.msg || error.message));

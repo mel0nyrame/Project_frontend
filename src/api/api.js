@@ -71,3 +71,27 @@ export const deleteScore = (studentId) => {
         method: 'DELETE'
     });
 };
+
+export const searchStudents = (keyword) => {
+    return request({
+        url: '/api/student/search',
+        method: 'GET',
+        params: { keyword }
+    });
+};
+
+export const searchCourses = (keyword) => {
+    return request({
+        url: '/api/course/search',
+        method: 'GET',
+        params: { keyword }
+    });
+};
+
+export const searchScores = (keyword) => {
+    return request({
+        url: '/api/score/search',
+        method: 'GET',
+        params: { keyword }
+    });
+};
